@@ -1,5 +1,5 @@
 from pico_csv_parser import pico_read_csv
-from oscilloscope_graphs import full_trace_1_channel
+from oscilloscope_graphs import draw_trace
 import os
 
 INPUT_DIRECTORY = "input/"
@@ -12,4 +12,4 @@ if __name__ == "__main__":
         # read the file
         parsed_data = pico_read_csv(INPUT_DIRECTORY + file)
         # plot the data
-        full_trace_1_channel(parsed_data, save_path=OUTPUT_DIRECTORY + file.replace(".csv", ".png"))
+        draw_trace(parsed_data, save_path=OUTPUT_DIRECTORY + file.replace(".csv", ".png"))
