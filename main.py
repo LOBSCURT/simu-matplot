@@ -37,13 +37,21 @@ def process_all_csv():
                     # read the file
                     parsed_data = pico_read_csv(INPUT_DIRECTORY + current_locale + file)
                     # plot the data
-                    draw_trace(parsed_data, save_path=OUTPUT_DIRECTORY + current_locale + file.replace(".csv", ".png"))
+                    draw_trace(parsed_data,
+                               save_path=OUTPUT_DIRECTORY + current_locale + file.replace(".csv", ".png"))
 
             else:
-                settings = setting_folder.split(";") # format : title_title text;x_min_x_max_x;y_min_y_max_y;unit_force unit
+                # format : title_title text;x_min_x_max_x;y_min_y_max_y;unit_force unit;digital;comparator_pourcent
+                # format continued : t0_start-time
+                settings = setting_folder.split(";")
                 y_lim = [None, None]
                 x_lim = [None, None]
                 title = ""
+                force_unit = None
+                digital = False
+                comparator_pourcent = None
+                t0 = None
+
                 for setting in settings:
                     setting_data = setting.split("_")
                     if setting_data[0] == "title":
@@ -56,6 +64,12 @@ def process_all_csv():
                         y_lim = list(map(lambda x: float(x.replace(",", ".")), y_lim))
                     elif setting_data[0] == "unit":
                         force_unit = setting_data[1]
+                    elif setting_data[0] == "digital":
+                        digital = True
+                    elif setting_data[0] == "comparator":
+                        comparator_pourcent = float(setting_data[1].replace(",", "."))
+                    elif setting_data[0] == "t0":
+                        t0 = float(setting_data[1].replace(",", "."))
                     else:
                         raise ValueError(f"Unknown setting : {setting_data[0]}  in folder {setting_folder}")
 
@@ -66,9 +80,8 @@ def process_all_csv():
                     # plot the data
                     draw_trace(parsed_data, title_text=title,
                                save_path=OUTPUT_DIRECTORY + current_locale + file.replace(".csv", ".png"),
-                               min_x=x_lim[0], max_x=x_lim[1], min_y=y_lim[0], max_y=y_lim[1])
-
-
+                               min_x=x_lim[0], max_x=x_lim[1], min_y=y_lim[0], max_y=y_lim[1], force_unit=force_unit,
+                               is_digital=digital, comparator_line=comparator_pourcent, t0=t0)
 
 
 if __name__ == "__main__":

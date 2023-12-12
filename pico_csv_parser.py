@@ -27,4 +27,4 @@ def pico_read_csv(file_name:str) -> tuple:
             voltage1.append(row[1])
             if len(row) >= 3:
                 voltage2.append(row[2])
-    return (time_unit, voltage_unit), (time, voltage1, voltage2)
+    return (time_unit, voltage_unit), [time, voltage1, voltage2]
