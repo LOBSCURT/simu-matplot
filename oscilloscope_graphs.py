@@ -74,7 +74,7 @@ def draw_trace(parsed_data: tuple, title_text: str = None, is_digital: bool = Fa
 
     # add a title
     if title_text is not None:
-        plt.title(title_text)
+        plt.title(title_text, fontsize=16)
 
     # setting the y-axis limits
     if is_digital:
