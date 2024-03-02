@@ -16,7 +16,7 @@ def process_data_file(file_path: str):
         with open(file_path, "r") as f:
             parsed_data = LTspice_read_txt(f.readlines())
 
-    # TODO : handle somewhere the inifications of units
+    # TODO : handle somewhere the unifications of units
 
     return parsed_data
 

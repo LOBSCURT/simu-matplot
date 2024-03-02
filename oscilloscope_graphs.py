@@ -1,21 +1,23 @@
 from matplotlib import pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 
+
 def draw_trace(parsed_data: tuple, title_text: str = None, is_digital: bool = False, save_path: str = None,
                max_y: float = None, min_y: float = 0, min_x: float = None, max_x: float = None, force_unit: str = None,
                comparator_line: float = None, t0=None) -> None:
     """
-    Plots the full trace of a single channel
-    :param parsed_data: the data to plot
+    Plots the full trace of 1 or 2 channels
+    :param parsed_data: the data to plot (contains the units and one or two traces)
     :param title_text: the title of the graph
     :param is_digital: if the data is digital (5V or 0V)
     :param save_path: the path to save the graph
-    :param max_y: the maximum value of the y axis
-    :param min_y: the minimum value of the y axis
-    :param min_x: the minimum value of the x axis
-    :param max_x: the maximum value of the x axis
+    :param max_y: the maximum value of the y-axis
+    :param min_y: the minimum value of the y-axis
+    :param min_x: the minimum value of the x-axis
+    :param max_x: the maximum value of the x-axis
     :param force_unit: the unit the data should be displayed in
     :param comparator_line: pourcentage of max the comparator line (if any)
+    :param t0: the time to start the graph from
     """
     # change units if needed TODO : does not work right now (might work)
     if force_unit is not None:
@@ -45,7 +47,6 @@ def draw_trace(parsed_data: tuple, title_text: str = None, is_digital: bool = Fa
         if max_x is not None:
             max_x = max_x - t0
         parsed_data[1][0] = list(map(lambda x: x - t0, parsed_data[1][0]))
-
 
     # change the tick style and text size
     plt.tick_params(axis='both', which='major', labelsize=14, direction="in")
