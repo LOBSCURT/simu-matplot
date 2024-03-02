@@ -1,3 +1,4 @@
+from LTspice_txt_parser import LTspice_read_txt
 from pico_csv_parser import pico_read_csv
 from oscilloscope_graphs import draw_trace
 import os
@@ -5,6 +6,19 @@ import shutil
 
 INPUT_DIRECTORY = "input/"
 OUTPUT_DIRECTORY = "output/"
+
+
+def process_data_file(file_path: str):
+    if file_path[-3:] == "csv":
+        with open(file_path, "r") as f:
+            parsed_data = pico_read_csv(f.readlines())
+    elif file_path[-3:] == "txt":
+        with open(file_path, "r") as f:
+            parsed_data = LTspice_read_txt(f.readlines())
+
+    # TODO : handle somewhere the inifications of units
+
+    return parsed_data
 
 
 def process_all_csv():
@@ -35,8 +49,7 @@ def process_all_csv():
                 for file in input_files:
                     current_locale = directory + setting_path
                     # read the file
-                    with open(INPUT_DIRECTORY + current_locale + file, "r") as f:
-                        parsed_data = pico_read_csv(f.readlines())
+                    parsed_data = process_data_file(INPUT_DIRECTORY + current_locale + file)
                     # plot the data
                     draw_trace(parsed_data,
                                save_path=OUTPUT_DIRECTORY + current_locale + file.replace(".csv", ".png"))
@@ -71,13 +84,13 @@ def process_all_csv():
                     elif setting_data[0] == "t0":
                         t0 = float(setting_data[1].replace(",", "."))
                     else:
-                        raise ValueError(f"Unknown setting : {setting_data[0]}  in folder {setting_folder} from {directory}")
+                        raise ValueError(
+                            f"Unknown setting : {setting_data[0]}  in folder {setting_folder} from {directory}")
 
                 for file in input_files:
                     current_locale = directory + setting_path
                     # read the file
-                    with open(INPUT_DIRECTORY + current_locale + file, "r") as f:
-                        parsed_data = pico_read_csv(f.readlines())
+                    parsed_data = process_data_file(INPUT_DIRECTORY + current_locale + file)
                     # plot the data
                     draw_trace(parsed_data, title_text=title,
                                save_path=OUTPUT_DIRECTORY + current_locale + file.replace(".csv", ".png"),
