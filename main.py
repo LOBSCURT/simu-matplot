@@ -39,7 +39,6 @@ def process_all_csv():
                     # plot the data
                     draw_trace(parsed_data,
                                save_path=OUTPUT_DIRECTORY + current_locale + file.replace(".csv", ".png"))
-
             else:
                 # format : title_title text;x_min_x_max_x;y_min_y_max_y;unit_force unit;digital;comparator_pourcent
                 # format continued : t0_start-time
@@ -71,7 +70,7 @@ def process_all_csv():
                     elif setting_data[0] == "t0":
                         t0 = float(setting_data[1].replace(",", "."))
                     else:
-                        raise ValueError(f"Unknown setting : {setting_data[0]}  in folder {setting_folder}")
+                        raise ValueError(f"Unknown setting : {setting_data[0]}  in folder {setting_folder} from {directory}")
 
                 for file in input_files:
                     current_locale = directory + setting_path

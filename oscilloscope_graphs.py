@@ -17,7 +17,7 @@ def draw_trace(parsed_data: tuple, title_text: str = None, is_digital: bool = Fa
     :param force_unit: the unit the data should be displayed in
     :param comparator_line: pourcentage of max the comparator line (if any)
     """
-    # change units if needed TODO : does not work right now
+    # change units if needed TODO : does not work right now (might work)
     if force_unit is not None:
         if force_unit == "V":
             if parsed_data[0][1] == "mV":
