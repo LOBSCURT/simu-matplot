@@ -35,7 +35,8 @@ def process_all_csv():
                 for file in input_files:
                     current_locale = directory + setting_path
                     # read the file
-                    parsed_data = pico_read_csv(INPUT_DIRECTORY + current_locale + file)
+                    with open(INPUT_DIRECTORY + current_locale + file, "r") as f:
+                        parsed_data = pico_read_csv(f.readlines())
                     # plot the data
                     draw_trace(parsed_data,
                                save_path=OUTPUT_DIRECTORY + current_locale + file.replace(".csv", ".png"))
@@ -75,7 +76,8 @@ def process_all_csv():
                 for file in input_files:
                     current_locale = directory + setting_path
                     # read the file
-                    parsed_data = pico_read_csv(INPUT_DIRECTORY + current_locale + file)
+                    with open(INPUT_DIRECTORY + current_locale + file, "r") as f:
+                        parsed_data = pico_read_csv(f.readlines())
                     # plot the data
                     draw_trace(parsed_data, title_text=title,
                                save_path=OUTPUT_DIRECTORY + current_locale + file.replace(".csv", ".png"),
