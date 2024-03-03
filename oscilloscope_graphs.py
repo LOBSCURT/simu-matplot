@@ -71,7 +71,7 @@ def get_trace_min(parsed_data: list[list], selected_traces: set[int]) -> float:
     :param selected_traces: the traces to get the minimum value from
     :return: the minimum value of the selected traces
     """
-    min_y = 100000000000000
+    min_y = 1e300
     for i in selected_traces:
         min_y = min(min(parsed_data[1][i]), min_y)
     return min_y
@@ -138,7 +138,7 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
     if parsed_data[1][2] == []:
         pass
     elif 2 in selected_traces:
-        plt.plot(parsed_data[1][0], parsed_data[1][2], linewidth=1)
+        plt.plot(parsed_data[1][0], parsed_data[1][2], linewidth=1.5, linestyle='-', color='r')
 
     # draw the comparator line
     if comparator_line is not None:
