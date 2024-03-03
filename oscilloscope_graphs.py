@@ -2,9 +2,39 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 
 
-def draw_trace(parsed_data: tuple, title_text: str = None, is_digital: bool = False, save_path: str = None,
-               max_y: float = None, min_y: float = 0, min_x: float = None, max_x: float = None, force_unit: str = None,
-               comparator_line: float = None, t0=None) -> None:
+def change_unit(data: list[float], source_unit: str, target_unit: str) -> list[float]:
+    scale_factors = {"V": 1, "mV": 1000}
+
+    if source_unit == target_unit:
+        return data
+    else:
+        source_scale = scale_factors[source_unit]
+        target_scale = scale_factors[target_unit]
+        return list(map(lambda x: x * target_scale / source_scale, data))
+
+
+def force_unit(parsed_data: list[list], expected_unit: str) -> list[list]:
+    """
+    Forces the data to be in a specific unit
+    :param parsed_data: the data to force
+    :param expected_unit: the unit to force the data to
+    :return: the data in the expected unit
+    """
+    for i, (source_unit, data) in enumerate(zip(parsed_data[0][1:], parsed_data[1][1:])):
+        if source_unit == expected_unit:
+            pass
+        else:
+            scaled_data = change_unit(data, source_unit, expected_unit)
+            parsed_data[1][i + 1] = scaled_data
+            parsed_data[0][i + 1] = expected_unit
+
+    return parsed_data
+
+
+def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool = False, save_path: str = None,
+               max_y: float = None, min_y: float = 0, min_x: float = None, max_x: float = None,
+               unit_to_force: str = None, comparator_line: float = None, t0=None,
+               selected_traces: set = {1, 2}) -> None:
     """
     Plots the full trace of 1 or 2 channels
     :param parsed_data: the data to plot (contains the units and one or two traces)
@@ -15,30 +45,17 @@ def draw_trace(parsed_data: tuple, title_text: str = None, is_digital: bool = Fa
     :param min_y: the minimum value of the y-axis
     :param min_x: the minimum value of the x-axis
     :param max_x: the maximum value of the x-axis
-    :param force_unit: the unit the data should be displayed in
+    :param unit_to_force: the unit the data should be displayed in
     :param comparator_line: pourcentage of max the comparator line (if any)
     :param t0: the time to start the graph from
+    :param selected_traces: the traces to plot
     """
     # change units if needed TODO : does not work right now (might work)
-    if force_unit is not None:
-        if force_unit == "V":
-            if parsed_data[0][1] == "mV":
-                parsed_data[1][1] = list(map(lambda x: x / 1000, parsed_data[1][1]))
-                try:
-                    parsed_data[1][2] = list(map(lambda x: x / 1000, parsed_data[1][2]))
-                except IndexError:
-                    pass
-                parsed_data[0][1] = "V"
-        elif force_unit == "mV":
-            if parsed_data[0][1] == "V":
-                parsed_data[1][1] = list(map(lambda x: x * 1000, parsed_data[1][1]))
-                try:
-                    parsed_data[1][2] = list(map(lambda x: x * 1000, parsed_data[1][2]))
-                except IndexError:
-                    pass
-                parsed_data[0][1] = "mV"
-        else:
-            raise ValueError(f"Unknown unit : {force_unit}")
+    if unit_to_force is not None:
+        parsed_data = force_unit(parsed_data, unit_to_force)
+    elif (parsed_data[0][2] is not None) and (parsed_data[0][1] != parsed_data[0][2]):
+        if parsed_data[0][1] == "V" or parsed_data[0][2] == "V":
+            parsed_data = force_unit(parsed_data, "V")
 
     # scale back time if needed
     if t0 is not None:
@@ -54,10 +71,11 @@ def draw_trace(parsed_data: tuple, title_text: str = None, is_digital: bool = Fa
     plt.grid(True, which='major', axis='both', linestyle='--')
 
     # plot the data
-    plt.plot(parsed_data[1][0], parsed_data[1][1], linewidth=1)
+    if 1 in selected_traces:
+        plt.plot(parsed_data[1][0], parsed_data[1][1], linewidth=1)
     if parsed_data[1][2] == []:
         pass
-    else:
+    elif 2 in selected_traces:
         plt.plot(parsed_data[1][0], parsed_data[1][2], linewidth=1)
 
     # draw the comparator line
