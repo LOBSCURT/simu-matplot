@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 
 
-def change_unit(data: list[float], source_unit: str, target_unit: str) -> list[float]:
+def change_voltage_unit(data: list[float], source_unit: str, target_unit: str) -> list[float]:
     scale_factors = {"V": 1, "mV": 1000}
 
     if source_unit == target_unit:
@@ -13,20 +13,40 @@ def change_unit(data: list[float], source_unit: str, target_unit: str) -> list[f
         return list(map(lambda x: x * target_scale / source_scale, data))
 
 
-def force_unit(parsed_data: list[list], expected_unit: str) -> list[list]:
+def change_time_unit(data: list[float], source_unit: str, target_unit: str) -> list[float]:
+    scale_factors = {"s": 1, "ms": 1000}
+
+    if source_unit == target_unit:
+        return data
+    else:
+        source_scale = scale_factors[source_unit]
+        target_scale = scale_factors[target_unit]
+        return list(map(lambda x: x * target_scale / source_scale, data))
+
+
+def force_units(parsed_data: list[list], expected_voltage_unit: str, expected_time_unit: str) -> list[list]:
     """
     Forces the data to be in a specific unit
     :param parsed_data: the data to force
-    :param expected_unit: the unit to force the data to
+    :param expected_voltage_unit: the unit to force the data to
     :return: the data in the expected unit
     """
+    # voltage
     for i, (source_unit, data) in enumerate(zip(parsed_data[0][1:], parsed_data[1][1:])):
-        if source_unit == expected_unit or source_unit is None:
+        if source_unit == expected_voltage_unit or source_unit is None:
             pass
         else:
-            scaled_data = change_unit(data, source_unit, expected_unit)
+            scaled_data = change_voltage_unit(data, source_unit, expected_voltage_unit)
             parsed_data[1][i + 1] = scaled_data
-            parsed_data[0][i + 1] = expected_unit
+            parsed_data[0][i + 1] = expected_voltage_unit
+
+    # time
+    if parsed_data[0][0] == expected_voltage_unit:
+        pass
+    else:
+        scaled_data = change_time_unit(parsed_data[1][0], parsed_data[0][0], expected_time_unit)
+        parsed_data[1][0] = scaled_data
+        parsed_data[0][0] = expected_voltage_unit
 
     return parsed_data
 
@@ -51,7 +71,7 @@ def get_trace_min(parsed_data: list[list], selected_traces: set[int]) -> float:
     :param selected_traces: the traces to get the minimum value from
     :return: the minimum value of the selected traces
     """
-    min_y = 0
+    min_y = 100000000000000
     for i in selected_traces:
         min_y = min(min(parsed_data[1][i]), min_y)
     return min_y
@@ -59,8 +79,8 @@ def get_trace_min(parsed_data: list[list], selected_traces: set[int]) -> float:
 
 def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool = False, save_path: str = None,
                max_y: float = None, min_y: float = 0, min_x: float = None, max_x: float = None,
-               unit_to_force: str = None, comparator_line: float = None, t0=None, selected_traces=None,
-               show_0=True) -> None:
+               voltage_unit_to_force: str = None, comparator_line: float = None, t0=None, selected_traces=None,
+               show_0=True, centered_2_5_V=False, time_unit_to_force="ms") -> None:
     """
     Plots the full trace of 1 or 2 channels
     :param parsed_data: the data to plot (contains the units and one or two traces)
@@ -71,11 +91,12 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
     :param min_y: the minimum value of the y-axis
     :param min_x: the minimum value of the x-axis
     :param max_x: the maximum value of the x-axis
-    :param unit_to_force: the unit the data should be displayed in
+    :param voltage_unit_to_force: the unit the data should be displayed in
     :param comparator_line: pourcentage of max the comparator line (if any)
     :param t0: the time to start the graph from
     :param selected_traces: the traces to plot
     :param show_0: if the plot should show 0
+    :param centered_2_5_V: if the plot should be centered around 2.5V
     """
 
     if selected_traces is None:
@@ -84,8 +105,10 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
         else:
             selected_traces = {1, 2}
 
-    if unit_to_force is not None:
-        working_voltage_unit = unit_to_force
+
+
+    if voltage_unit_to_force is not None:
+        working_voltage_unit = voltage_unit_to_force
     elif (parsed_data[0][2] is None) or (parsed_data[0][1] == parsed_data[0][2]):
         working_voltage_unit = parsed_data[0][1]
     elif (parsed_data[0][1] == "V" and 1 in selected_traces) or (parsed_data[0][2] == "V" and 1 in selected_traces):
@@ -94,7 +117,7 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
         working_voltage_unit = "mV"
 
     # change units if needed
-    parsed_data = force_unit(parsed_data, working_voltage_unit)
+    parsed_data = force_units(parsed_data, working_voltage_unit, time_unit_to_force)
 
     # scale back time if needed
     if t0 is not None:
@@ -139,40 +162,29 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
         if comparator_line is None:
             ax = plt.gca()
             ax.set_yticks(list(ax.get_xticks()) + [0, 2.5, 5])
-        plt.ylim(0, 5.15)
-
+        min_y = 0
+        max_y = 5.15
     else:
         if min_y is None:
             if show_0:
                 min_y = 0
             else:
-                if 1 in selected_traces and 2 not in selected_traces:
-                    min_y = (1 - 0.05) * min(parsed_data[1][1])
-                elif 2 in selected_traces and 1 not in selected_traces:
-                    min_y = (1 - 0.05) * min(parsed_data[1][2])
-                else:
-                    min_y = (1 - 0.05) * min(min(parsed_data[1][1]), min(parsed_data[1][2]))
+                min_y = (1 - 0.05) * get_trace_min(parsed_data, selected_traces)
 
-        if max_y is not None:
-            plt.ylim(min_y, max_y)
-        else:
-            if 1 in selected_traces and 2 not in selected_traces:
-                max_y = (1 + 0.05) * max(parsed_data[1][1])
-                plt.ylim(min_y, max_y)
-
-            elif 2 in selected_traces and 1 not in selected_traces:
-                max_y = (1 + 0.05) * max(parsed_data[1][2])
-                plt.ylim(min_y, max_y)
-
-            else:
-                max_y = (1 + 0.05) * max(max(parsed_data[1][1]), max(parsed_data[1][2]))
-                plt.ylim(min_y, max_y)
+        if max_y is None:
+            max_y = (1 + 0.05) * get_trace_max(parsed_data, selected_traces)
+    # change the tiks if the data is centered around 2.5 V
+    if centered_2_5_V:
+        ax = plt.gca()
+        ax.set_yticks(list(ax.get_xticks()) + [get_trace_min(parsed_data, selected_traces), 2.5, get_trace_max(parsed_data, selected_traces)])
+    plt.ylim(min_y, max_y)
 
     # setting the x-axis limits
     if min_x is None:
         min_x = min(parsed_data[1][0])
     if max_x is None:
         max_x = max(parsed_data[1][0])
+
     plt.xlim(min_x, max_x)
 
     # saving of displaying the graph
