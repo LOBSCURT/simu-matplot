@@ -1,9 +1,11 @@
-def LTspice_read_txt(raw_data: list[str]) -> tuple[tuple, list[list]]:
+def LTspice_read_txt(raw_data: list[str]) -> list[list]:
     """
-    Reads a txt LTspice raw file content and returns the units as a tuple (time, voltage)
-    and the data as a list of lists (time, voltage1, [voltage2])
+    Reads a txt LTspice raw file content and returns the units as a list [time, voltage]
+    and the data as a list of lists [time, voltage1, [voltage2]]
     """
-    units = ("s", "V")
+    units = ["s", "V", None]
+    if len(raw_data[0].split("\t")) == 3:
+        units[2] = "V"
 
     time = []
     voltage1 = []
@@ -16,4 +18,4 @@ def LTspice_read_txt(raw_data: list[str]) -> tuple[tuple, list[list]]:
         if len(row) >= 3:
             voltage2.append(row[2])
 
-    return units, [time, voltage1, voltage2]
+    return [units, [time, voltage1, voltage2]]
