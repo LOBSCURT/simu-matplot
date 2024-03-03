@@ -63,7 +63,7 @@ def process_all_csv():
                 digital = False
                 comparator_pourcent = None
                 t0 = None
-                selected_traces = {1, 2}
+                selected_traces = None
 
                 for setting in settings:
                     setting_data = setting.split("_")

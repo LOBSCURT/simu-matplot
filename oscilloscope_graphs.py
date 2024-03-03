@@ -21,7 +21,7 @@ def force_unit(parsed_data: list[list], expected_unit: str) -> list[list]:
     :return: the data in the expected unit
     """
     for i, (source_unit, data) in enumerate(zip(parsed_data[0][1:], parsed_data[1][1:])):
-        if source_unit == expected_unit:
+        if source_unit == expected_unit or source_unit is None:
             pass
         else:
             scaled_data = change_unit(data, source_unit, expected_unit)
@@ -34,7 +34,7 @@ def force_unit(parsed_data: list[list], expected_unit: str) -> list[list]:
 def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool = False, save_path: str = None,
                max_y: float = None, min_y: float = 0, min_x: float = None, max_x: float = None,
                unit_to_force: str = None, comparator_line: float = None, t0=None,
-               selected_traces: set = {1, 2}) -> None:
+               selected_traces=None) -> None:
     """
     Plots the full trace of 1 or 2 channels
     :param parsed_data: the data to plot (contains the units and one or two traces)
@@ -50,12 +50,24 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
     :param t0: the time to start the graph from
     :param selected_traces: the traces to plot
     """
-    # change units if needed TODO : does not work right now (might work)
+
+    if selected_traces is None:
+        if parsed_data[0][2] is None:
+            selected_traces = {1}
+        else:
+            selected_traces = {1, 2}
+
     if unit_to_force is not None:
-        parsed_data = force_unit(parsed_data, unit_to_force)
-    elif (parsed_data[0][2] is not None) and (parsed_data[0][1] != parsed_data[0][2]):
-        if parsed_data[0][1] == "V" or parsed_data[0][2] == "V":
-            parsed_data = force_unit(parsed_data, "V")
+        working_voltage_unit = unit_to_force
+    elif (parsed_data[0][2] is None) or (parsed_data[0][1] == parsed_data[0][2]):
+        working_voltage_unit = parsed_data[0][1]
+    elif (parsed_data[0][1] == "V" and 1 in selected_traces) or (parsed_data[0][2] == "V" and 1 in selected_traces):
+        working_voltage_unit = "V"
+    else:
+        working_voltage_unit = "mV"
+
+    # change units if needed
+    parsed_data = force_unit(parsed_data, working_voltage_unit)
 
     # scale back time if needed
     if t0 is not None:
@@ -107,11 +119,24 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
         if max_y is not None:
             plt.ylim(min_y, max_y)
         else:
-            max_y = max(parsed_data[1][1]) + 0.05 * max(parsed_data[1][1])
-            if (max_y <= 1 and parsed_data[0][1] == "V") or (max_y <= 1000 and parsed_data[0][1] == "mV"):
-                plt.ylim(min_y, max_y)
+            if 1 in selected_traces and 2 not in selected_traces:
+                max_y = (1 + 0.05) * max(parsed_data[1][1])
+                if (max_y <= 1 and working_voltage_unit == "V") or (max_y <= 1000 and working_voltage_unit == "mV"):
+                    plt.ylim(min_y, max_y)
+                else:
+                    plt.ylim(0, 5.05)
+            elif 2 in selected_traces and 1 not in selected_traces:
+                max_y = (1 + 0.05) * max(parsed_data[1][2])
+                if (max_y <= 1 and working_voltage_unit == "V") or (max_y <= 1000 and working_voltage_unit == "mV"):
+                    plt.ylim(min_y, max_y)
+                else:
+                    plt.ylim(0, 5.05)
             else:
-                plt.ylim(0, 5.05)
+                max_y = (1 + 0.05) * max(max(parsed_data[1][1]), max(parsed_data[1][2]))
+                if (max_y <= 1 and working_voltage_unit == "V") or (max_y <= 1000 and working_voltage_unit == "mV"):
+                    plt.ylim(min_y, max_y)
+                else:
+                    plt.ylim(0, 5.05)
 
     # setting the x-axis limits
     if min_x is None:
