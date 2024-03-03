@@ -31,10 +31,36 @@ def force_unit(parsed_data: list[list], expected_unit: str) -> list[list]:
     return parsed_data
 
 
+def get_trace_max(parsed_data: list[list], selected_traces: set[int]) -> float:
+    """
+    Returns the maximum value of the selected traces
+    :param parsed_data: the data to get the maximum value from
+    :param selected_traces: the traces to get the maximum value from
+    :return: the maximum value of the selected traces
+    """
+    max_y = 0
+    for i in selected_traces:
+        max_y = max(max(parsed_data[1][i]), max_y)
+    return max_y
+
+
+def get_trace_min(parsed_data: list[list], selected_traces: set[int]) -> float:
+    """
+    Returns the minimum value of the selected traces
+    :param parsed_data: the data to get the minimum value from
+    :param selected_traces: the traces to get the minimum value from
+    :return: the minimum value of the selected traces
+    """
+    min_y = 0
+    for i in selected_traces:
+        min_y = min(min(parsed_data[1][i]), min_y)
+    return min_y
+
+
 def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool = False, save_path: str = None,
                max_y: float = None, min_y: float = 0, min_x: float = None, max_x: float = None,
-               unit_to_force: str = None, comparator_line: float = None, t0=None,
-               selected_traces=None) -> None:
+               unit_to_force: str = None, comparator_line: float = None, t0=None, selected_traces=None,
+               show_0=True) -> None:
     """
     Plots the full trace of 1 or 2 channels
     :param parsed_data: the data to plot (contains the units and one or two traces)
@@ -49,6 +75,7 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
     :param comparator_line: pourcentage of max the comparator line (if any)
     :param t0: the time to start the graph from
     :param selected_traces: the traces to plot
+    :param show_0: if the plot should show 0
     """
 
     if selected_traces is None:
@@ -113,30 +140,33 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
             ax = plt.gca()
             ax.set_yticks(list(ax.get_xticks()) + [0, 2.5, 5])
         plt.ylim(0, 5.15)
+
     else:
         if min_y is None:
-            min_y = 0
+            if show_0:
+                min_y = 0
+            else:
+                if 1 in selected_traces and 2 not in selected_traces:
+                    min_y = (1 - 0.05) * min(parsed_data[1][1])
+                elif 2 in selected_traces and 1 not in selected_traces:
+                    min_y = (1 - 0.05) * min(parsed_data[1][2])
+                else:
+                    min_y = (1 - 0.05) * min(min(parsed_data[1][1]), min(parsed_data[1][2]))
+
         if max_y is not None:
             plt.ylim(min_y, max_y)
         else:
             if 1 in selected_traces and 2 not in selected_traces:
                 max_y = (1 + 0.05) * max(parsed_data[1][1])
-                if (max_y <= 1 and working_voltage_unit == "V") or (max_y <= 1000 and working_voltage_unit == "mV"):
-                    plt.ylim(min_y, max_y)
-                else:
-                    plt.ylim(0, 5.05)
+                plt.ylim(min_y, max_y)
+
             elif 2 in selected_traces and 1 not in selected_traces:
                 max_y = (1 + 0.05) * max(parsed_data[1][2])
-                if (max_y <= 1 and working_voltage_unit == "V") or (max_y <= 1000 and working_voltage_unit == "mV"):
-                    plt.ylim(min_y, max_y)
-                else:
-                    plt.ylim(0, 5.05)
+                plt.ylim(min_y, max_y)
+
             else:
                 max_y = (1 + 0.05) * max(max(parsed_data[1][1]), max(parsed_data[1][2]))
-                if (max_y <= 1 and working_voltage_unit == "V") or (max_y <= 1000 and working_voltage_unit == "mV"):
-                    plt.ylim(min_y, max_y)
-                else:
-                    plt.ylim(0, 5.05)
+                plt.ylim(min_y, max_y)
 
     # setting the x-axis limits
     if min_x is None:

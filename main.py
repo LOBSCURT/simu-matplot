@@ -54,7 +54,7 @@ def process_all_csv():
                     draw_trace(parsed_data, save_path=OUTPUT_DIRECTORY + current_locale + file.replace(".csv", ".png"))
             else:
                 # format: title_title-text;x_min_x_max_x;y_min_y_max_y;unit_force unit;digital;comparator_pourcent
-                # format continued: t0_start-time;selectTrace_1_2
+                # format continued: t0_start-time;selectTrace_1_2;show0_False
                 settings = setting_folder.split(";")
                 y_lim = [None, None]
                 x_lim = [None, None]
@@ -64,6 +64,7 @@ def process_all_csv():
                 comparator_pourcent = None
                 t0 = None
                 selected_traces = None
+                show_0 = True
 
                 for setting in settings:
                     setting_data = setting.split("_")
@@ -88,6 +89,8 @@ def process_all_csv():
                         selected_traces.add(int(setting_data[1]))
                         if len(setting_data) == 3:
                             selected_traces.add(int(setting_data[2]))
+                    elif setting_data[0] == "show0":
+                        show_0 = setting_data[1] == "True"
                     else:
                         raise ValueError(
                             f"Unknown setting : {setting_data[0]}  in folder {setting_folder} from {directory}")
@@ -100,7 +103,7 @@ def process_all_csv():
                     draw_trace(parsed_data, title_text=title, is_digital=digital,
                                save_path=OUTPUT_DIRECTORY + current_locale + file.replace(".csv", ".png"),
                                max_y=y_lim[1], min_y=y_lim[0], min_x=x_lim[0], max_x=x_lim[1], unit_to_force=force_unit,
-                               comparator_line=comparator_pourcent, t0=t0, selected_traces=selected_traces)
+                               comparator_line=comparator_pourcent, t0=t0, selected_traces=selected_traces, show_0=show_0)
 
 
 if __name__ == "__main__":
