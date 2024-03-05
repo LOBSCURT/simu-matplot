@@ -77,10 +77,28 @@ def get_trace_min(parsed_data: list[list], selected_traces: set[int]) -> float:
     return min_y
 
 
+def change_ground(parsed_data: list[list], ground: float) -> list[list]:
+    """
+    Changes the ground of the data
+    :param parsed_data: the data to change the ground of
+    :param ground: the ground to change to (in V)
+    :return: the data with the new ground
+    """
+    if parsed_data[0][1] == "V":
+        parsed_data[1][1] = list(map(lambda x: float(round(x - ground, 5)), parsed_data[1][1]))
+        if parsed_data[0][2] == "V":
+            parsed_data[1][2] = list(map(lambda x: float(round(x - ground, 5)), parsed_data[1][2]))
+    elif parsed_data[0][1] == "mV":
+        parsed_data[1][1] = list(map(lambda x: float(round(x - ground * 1000, 5)), parsed_data[1][1]))
+        if parsed_data[0][2] == "mV":
+            parsed_data[1][2] = list(map(lambda x: float(round(x - ground * 1000, 5)), parsed_data[1][2]))
+    return parsed_data
+
+
 def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool = False, save_path: str = None,
                max_y: float = None, min_y: float = 0, min_x: float = None, max_x: float = None,
                voltage_unit_to_force: str = None, comparator_line: float = None, t0=None, selected_traces=None,
-               show_0=True, centered_2_5_V=False, time_unit_to_force="ms") -> None:
+               show_0=True, centered_2_5_V=False, time_unit_to_force="ms", ground=0) -> None:
     """
     Plots the full trace of 1 or 2 channels
     :param parsed_data: the data to plot (contains the units and one or two traces)
@@ -97,6 +115,7 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
     :param selected_traces: the traces to plot
     :param show_0: if the plot should show 0
     :param centered_2_5_V: if the plot should be centered around 2.5V
+    :param ground: ground at something else than 0V (in V)
     """
 
     if selected_traces is None:
@@ -104,6 +123,7 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
             selected_traces = {1}
         else:
             selected_traces = {1, 2}
+
 
 
 
@@ -118,6 +138,10 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
 
     # change units if needed
     parsed_data = force_units(parsed_data, working_voltage_unit, time_unit_to_force)
+
+    # change the ground if needed
+    if ground != 0:
+        parsed_data = change_ground(parsed_data, ground)
 
     # scale back time if needed
     if t0 is not None:
@@ -138,7 +162,7 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
     if parsed_data[1][2] == []:
         pass
     elif 2 in selected_traces:
-        plt.plot(parsed_data[1][0], parsed_data[1][2], linewidth=1.5, linestyle='-', color='r')
+        plt.plot(parsed_data[1][0], parsed_data[1][2], linewidth=1)
 
     # draw the comparator line
     if comparator_line is not None:
