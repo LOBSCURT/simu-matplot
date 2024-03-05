@@ -46,7 +46,7 @@ def force_units(parsed_data: list[list], expected_voltage_unit: str, expected_ti
     else:
         scaled_data = change_time_unit(parsed_data[1][0], parsed_data[0][0], expected_time_unit)
         parsed_data[1][0] = scaled_data
-        parsed_data[0][0] = expected_voltage_unit
+        parsed_data[0][0] = expected_time_unit
 
     return parsed_data
 
