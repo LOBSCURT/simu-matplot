@@ -110,6 +110,7 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
     :param min_x: the minimum value of the x-axis
     :param max_x: the maximum value of the x-axis
     :param voltage_unit_to_force: the unit the data should be displayed in
+    :param time_unit_to_force: the unit the time should be displayed in
     :param comparator_line: pourcentage of max the comparator line (if any)
     :param t0: the time to start the graph from
     :param selected_traces: the traces to plot
