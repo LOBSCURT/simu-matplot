@@ -85,20 +85,21 @@ def change_ground(parsed_data: list[list], ground: float) -> list[list]:
     :return: the data with the new ground
     """
     if parsed_data[0][1] == "V":
-        parsed_data[1][1] = list(map(lambda x: float(round(x - ground, 5)), parsed_data[1][1]))
+        parsed_data[1][1] = list(map(lambda x: float(round(x + ground, 5)), parsed_data[1][1]))
         if parsed_data[0][2] == "V":
-            parsed_data[1][2] = list(map(lambda x: float(round(x - ground, 5)), parsed_data[1][2]))
+            parsed_data[1][2] = list(map(lambda x: float(round(x + ground, 5)), parsed_data[1][2]))
     elif parsed_data[0][1] == "mV":
-        parsed_data[1][1] = list(map(lambda x: float(round(x - ground * 1000, 5)), parsed_data[1][1]))
+        parsed_data[1][1] = list(map(lambda x: float(round(x + ground * 1000, 5)), parsed_data[1][1]))
         if parsed_data[0][2] == "mV":
-            parsed_data[1][2] = list(map(lambda x: float(round(x - ground * 1000, 5)), parsed_data[1][2]))
+            parsed_data[1][2] = list(map(lambda x: float(round(x + ground * 1000, 5)), parsed_data[1][2]))
     return parsed_data
 
 
 def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool = False, save_path: str = None,
                max_y: float = None, min_y: float = 0, min_x: float = None, max_x: float = None,
                voltage_unit_to_force: str = None, comparator_line: float = None, t0=None, selected_traces=None,
-               show_0=True, centered_2_5_V=False, time_unit_to_force="ms", ground=0) -> None:
+               show_0=True, centered_2_5_V=False, time_unit_to_force="ms", ground=0, invert_colors=False,
+               doted: dict = None) -> None:
     """
     Plots the full trace of 1 or 2 channels
     :param parsed_data: the data to plot (contains the units and one or two traces)
@@ -124,9 +125,6 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
             selected_traces = {1}
         else:
             selected_traces = {1, 2}
-
-
-
 
     if voltage_unit_to_force is not None:
         working_voltage_unit = voltage_unit_to_force
@@ -157,13 +155,30 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
     # draw the grid
     plt.grid(True, which='major', axis='both', linestyle='--')
 
+    if invert_colors:
+        color2 = "C0"
+        color1 = "C1"
+    else:
+        color1 = "C0"
+        color2 = "C1"
+
+    line_style1 = line_style2 = "-"
+    linewidth1 = linewidth2 = 1
+    if doted is not None:
+        if 1 in doted:
+            line_style1 = "--"
+            linewidth1 = 1.5
+        if 2 in doted:
+            line_style2 = "--"
+            linewidth2 = 1.5
+
     # plot the data
     if 1 in selected_traces:
-        plt.plot(parsed_data[1][0], parsed_data[1][1], linewidth=1)
+        plt.plot(parsed_data[1][0], parsed_data[1][1], linewidth=linewidth1, color=color1, linestyle=line_style1)
     if parsed_data[1][2] == []:
         pass
     elif 2 in selected_traces:
-        plt.plot(parsed_data[1][0], parsed_data[1][2], linewidth=1)
+        plt.plot(parsed_data[1][0], parsed_data[1][2], linewidth=linewidth2, color=color2, linestyle=line_style2)
 
     # draw the comparator line
     if comparator_line is not None:
@@ -201,7 +216,8 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
     # change the tiks if the data is centered around 2.5 V
     if centered_2_5_V:
         ax = plt.gca()
-        ax.set_yticks(list(ax.get_xticks()) + [get_trace_min(parsed_data, selected_traces), 2.5, get_trace_max(parsed_data, selected_traces)])
+        ax.set_yticks(list(ax.get_xticks()) + [get_trace_min(parsed_data, selected_traces), 2.5,
+                                               get_trace_max(parsed_data, selected_traces)])
     plt.ylim(min_y, max_y)
 
     # setting the x-axis limits

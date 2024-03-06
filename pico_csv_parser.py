@@ -18,7 +18,11 @@ def pico_read_csv(raw_data: list[str]) -> list[list]:
     for row in raw_data[3:-1]:
         row = row.strip("\n").split(";")
         row = tuple(map(lambda x: x.replace(",", "."), row))
-        row = tuple(map(lambda x: float(x), row))
+        try:
+            row = tuple(map(lambda x: float(x), row))
+        except ValueError:
+            print(row)
+
         time.append(row[0])
         voltage1.append(row[1])
         if len(row) >= 3:
