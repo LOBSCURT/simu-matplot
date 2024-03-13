@@ -80,6 +80,7 @@ def process_all_csv():
                 ground = 0 # to indicate when the mesure was taken with a ground at something else than 0V (in V)
                 invert_colors = False
                 doted = None
+                legende = None
 
                 for setting in settings:
                     setting_data = setting.split("_")
@@ -117,6 +118,11 @@ def process_all_csv():
                         doted.add(int(setting_data[1]))
                         if len(setting_data) == 3:
                             doted.add(int(setting_data[2]))
+                    elif setting_data[0] == "legende":
+                        legende = []
+                        legende.append(str(setting_data[1]))
+                        if len(setting_data) == 3:
+                            legende.append(str(setting_data[2]))
                     else:
                         raise ValueError(
                             f"Unknown setting : {setting_data[0]}  in folder {setting_folder} from {directory}")
@@ -131,7 +137,7 @@ def process_all_csv():
                                max_y=y_lim[1], min_y=y_lim[0], min_x=x_lim[0], max_x=x_lim[1],
                                voltage_unit_to_force=force_unit, comparator_line=comparator_pourcent, t0=t0,
                                selected_traces=selected_traces, show_0=show_0, centered_2_5_V=centered_2_5_V,
-                               ground=ground, invert_colors=invert_colors, doted=doted)
+                               ground=ground, invert_colors=invert_colors, doted=doted, legende=legende)
 
 
 if __name__ == "__main__":

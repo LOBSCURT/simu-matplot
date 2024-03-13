@@ -16,7 +16,7 @@ def pico_read_csv(raw_data: list[str]) -> list[list]:
     voltage1 = []
     voltage2 = []
     for row in raw_data[3:-1]:
-        row = row.strip("\n").split(";")
+        row = row.strip(";\n").split(";")
         row = tuple(map(lambda x: x.replace(",", "."), row))
         try:
             row = tuple(map(lambda x: float(x), row))
