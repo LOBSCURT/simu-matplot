@@ -186,7 +186,7 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
         else:
             plt.plot(parsed_data[1][0], parsed_data[1][2], linewidth=linewidth2, color=color2, linestyle=line_style2, label=legende[1])
     if legende is not None:
-        plt.legend(loc='upper center')
+        plt.legend(loc='upper right')
 
     # draw the comparator line
     if comparator_line is not None:
